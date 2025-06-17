@@ -1,0 +1,448 @@
+`timescale 1ns/1ps
+module FLP_DP_pipe(clk,rst,x1,x2,x3,x4,y1,y2,y3,y4,z);
+    input clk,rst;
+    input [31:0]x1,x2,x3,x4,y1,y2,y3,y4;
+    output [31:0]z;
+    wire sign_1,sign_2,sign_3,sign_4,sign_add,sign_1p,sign_2p,sign_3p,sign_4p,sign_addp,sign_addpp,gclk1,gclk2,sign_12p,sign_22p,sign_32p,sign_42p,sign_addp2,sign_addpp2;
+    wire [7:0]ex_max32,n_ex32,ex_max32p,n_ex32p,ex_max32pp;
+    wire [4:0]ex_max16,n_ex16,ex_max16p,n_ex16p,ex_max16pp;
+    wire [26:0]n_f32,n_f32p;
+    wire [13:0]n_f16,n_f16p;
+    wire [50:0]s_fraction1,s_fraction2,s_fraction3,s_fraction4,com_sum32,s_fraction1p,s_fraction2p,s_fraction3p,s_fraction4p,com_sum32p;
+    wire [24:0]s_fractionf1,s_fractionf2,s_fractionf3,s_fractionf4,com_sum16,s_fractionf1p,s_fractionf2p,s_fractionf3p,s_fractionf4p,com_sum16p;
+    wire [15:0]test;
+    wire check1,check2;
+    assign test = x1[31:16];
+    assign check1 = (test==16'd0)?1'b0:1'b1;
+    assign check2 = (test==16'd0)?1'b1:1'b0;
+    assign gclk1 = clk & check1;
+    assign gclk2 = clk & check2;
+    up stage1(.gclk1(check1),.x1(x1),.x2(x2),.x3(x3),.x4(x4),.y1(y1),.y2(y2),.y3(y3),.y4(y4),.sign_1(sign_1),.sign_2(sign_2),.sign_3(sign_3),.sign_4(sign_4),.ex_max32(ex_max32),.ex_max16(ex_max16),.s_fraction1(s_fraction1),.s_fraction2(s_fraction2),.s_fraction3(s_fraction3),.s_fraction4(s_fraction4),
+    .s_fractionf1(s_fractionf1),.s_fractionf2(s_fractionf2),.s_fractionf3(s_fractionf3),.s_fractionf4(s_fractionf4));
+
+    DFF1 D1(.clk(gclk1),.rst(rst),.sign_1(sign_1),.sign_2(sign_2),.sign_3(sign_3),.sign_4(sign_4),.ex_max32(ex_max32),.s_fraction1(s_fraction1),.s_fraction2(s_fraction2),.s_fraction3(s_fraction3),.s_fraction4(s_fraction4),
+        .sign_1p(sign_1p),.sign_2p(sign_2p),.sign_3p(sign_3p),.sign_4p(sign_4p),.ex_max32p(ex_max32p),.s_fraction1p(s_fraction1p),.s_fraction2p(s_fraction2p),.s_fraction3p(s_fraction3p),.s_fraction4p(s_fraction4p));
+
+    DFF12 D12(.clk(gclk2),.rst(rst),.sign_1(sign_1),.sign_2(sign_2),.sign_3(sign_3),.sign_4(sign_4),.ex_max16(ex_max16),.s_fractionf1(s_fractionf1),.s_fractionf2(s_fractionf2),.s_fractionf3(s_fractionf3),.s_fractionf4(s_fractionf4),
+        .sign_12p(sign_12p),.sign_22p(sign_22p),.sign_32p(sign_32p),.sign_42p(sign_42p),.ex_max16p(ex_max16p),.s_fractionf1p(s_fractionf1p),.s_fractionf2p(s_fractionf2p),.s_fractionf3p(s_fractionf3p),.s_fractionf4p(s_fractionf4p));
+
+
+    ad stage2(.gclk1(check1),.sign_1(sign_1p),.sign_2(sign_2p),.sign_3(sign_3p),.sign_4(sign_4p),.sign_21(sign_12p),.sign_22(sign_22p),.sign_23(sign_32p),.sign_24(sign_42p),.s_fraction1(s_fraction1p),.s_fraction2(s_fraction2p),.s_fraction3(s_fraction3p),.s_fraction4(s_fraction4p),
+        .sign_add(sign_add),.com_sum32(com_sum32),.s_fractionf1(s_fractionf1p),.s_fractionf2(s_fractionf2p),.s_fractionf3(s_fractionf3p),.s_fractionf4(s_fractionf4p),.com_sum16(com_sum16));
+
+    DFF2 D2(.clk(gclk1),.rst(rst),.sign_add(sign_add),.ex_max32p(ex_max32p),.com_sum32(com_sum32),.sign_addp(sign_addp),.ex_max32pp(ex_max32pp),.com_sum32p(com_sum32p));
+
+    DFF22 D22(.clk(gclk2),.rst(rst),.sign_add(sign_add),.ex_max16p(ex_max16p),.com_sum16(com_sum16),.sign_addp(sign_addp2),.ex_max16pp(ex_max16pp),.com_sum16p(com_sum16p));
+
+    normal stage3(.gclk1(check1),.ex_max32(ex_max32pp),.com_sum32(com_sum32p),.ex_max16(ex_max16pp),.com_sum16(com_sum16p),.n_ex32(n_ex32),.n_f32(n_f32),.n_ex16(n_ex16),.n_f16(n_f16));
+
+    DFF3 D3(.clk(gclk1),.rst(rst),.sign_addp(sign_addp),.n_ex32(n_ex32),.n_f32(n_f32),.n_ex32p(n_ex32p),.n_f32p(n_f32p),.sign_addpp(sign_addpp));
+
+    DFF32 D32(.clk(gclk2),.rst(rst),.sign_addp(sign_addp2),.n_ex16(n_ex16),.n_f16(n_f16),.n_ex16p(n_ex16p),.n_f16p(n_f16p),.sign_addpp(sign_addpp2));
+
+    rp stage4(.gclk1(check1),.sign_add(sign_addpp),.sign_addpp2(sign_addpp2),.n_ex32(n_ex32p),.n_f32(n_f32p),.n_ex16(n_ex16p),.n_f16(n_f16p),.s(z));
+endmodule
+//unpack
+module up(gclk1,x1,x2,x3,x4,y1,y2,y3,y4,sign_1,sign_2,sign_3,sign_4,ex_max32,ex_max16,s_fraction1,s_fraction2,s_fraction3,s_fraction4,
+                s_fractionf1,s_fractionf2,s_fractionf3,s_fractionf4);
+    input [31:0]x1,x2,x3,x4,y1,y2,y3,y4;
+    input gclk1;
+    output reg sign_1,sign_2,sign_3,sign_4;
+    output reg [7:0]ex_max32;
+    output reg [4:0]ex_max16;
+    output reg [50:0]s_fraction1,s_fraction2,s_fraction3,s_fraction4;
+    output reg [24:0]s_fractionf1,s_fractionf2,s_fractionf3,s_fractionf4;
+    reg [15:0]XH1,XL1,YH1,YL1,XH2,XL2,YH2,YL2;
+    reg [15:0]XH3,XL3,YH3,YL3,XH4,XL4,YH4,YL4;
+    reg [7:0]ex_x1,ex_x2,ex_x3,ex_x4,ex_y1,ex_y2,ex_y3,ex_y4,diff1,diff2,diff3,diff4,ex_add1,ex_add2,ex_add3,ex_add4;
+    reg [4:0]ex_hx1,ex_hx2,ex_hx3,ex_hx4,ex_hy1,ex_hy2,ex_hy3,ex_hy4,dif1,dif2,dif3,dif4,ex_addf1,ex_addf2,ex_addf3,ex_addf4;
+    reg [23:0]fraction_x1,fraction_x2,fraction_x3,fraction_x4;
+    reg [10:0]fraction_hx1,fraction_hx2,fraction_hx3,fraction_hx4,fraction_hy1,fraction_hy2,fraction_hy3,fraction_hy4;
+    reg [23:0]fraction_y1,fraction_y2,fraction_y3,fraction_y4;
+    reg [50:0]fraction_mul1,fraction_mul2,fraction_mul3,fraction_mul4;
+    reg [24:0]fraction_fmul1,fraction_fmul2,fraction_fmul3,fraction_fmul4;
+    reg [47:0]m1,m2,m3,m4;
+    reg [21:0]mf1,mf2,mf3,mf4;
+
+    always @(*)begin
+        {XH1,XH2,XH3,XH4} = {x1[31:16],x2[31:16],x3[31:16],x4[31:16]};
+        {XL1,XL2,XL3,XL4} = {x1[15:0],x2[15:0],x3[15:0],x4[15:0]};
+        {YH1,YH2,YH3,YH4} = {y1[31:16],y2[31:16],y3[31:16],y4[31:16]};
+        {YL1,YL2,YL3,YL4} = {y1[15:0],y2[15:0],y3[15:0],y4[15:0]};
+    end
+    always @(*) begin
+        if(gclk1)begin
+        sign_1 = (XH1[15]^YH1[15]);
+        sign_2 = (XH2[15]^YH2[15]);
+        sign_3 = (XH3[15]^YH3[15]);
+        sign_4 = (XH4[15]^YH4[15]);
+        ex_x1 = XH1[14:7];
+        ex_x2 = XH2[14:7];
+        ex_x3 = XH3[14:7];
+        ex_x4 = XH4[14:7];
+        ex_y1 = YH1[14:7];
+        ex_y2 = YH2[14:7];
+        ex_y3 = YH3[14:7];
+        ex_y4 = YH4[14:7];
+        fraction_x1 = {1'b1,XH1[6:0],XL1[15:0]};
+        fraction_x2 = {1'b1,XH2[6:0],XL2[15:0]};
+        fraction_x3 = {1'b1,XH3[6:0],XL3[15:0]};
+        fraction_x4 = {1'b1,XH4[6:0],XL4[15:0]};
+        fraction_y1 = {1'b1,YH1[6:0],YL1[15:0]};
+        fraction_y2 = {1'b1,YH2[6:0],YL2[15:0]};
+        fraction_y3 = {1'b1,YH3[6:0],YL3[15:0]};
+        fraction_y4 = {1'b1,YH4[6:0],XL4[15:0]};
+        ex_add1 =(ex_x1-8'd127)+(ex_y1-8'd127)+8'd127;
+        ex_add2 =(ex_x2-8'd127)+(ex_y2-8'd127)+8'd127;
+        ex_add3 =(ex_x3-8'd127)+(ex_y3-8'd127)+8'd127;
+        ex_add4 =(ex_x4-8'd127)+(ex_y4-8'd127)+8'd127;
+        m1 = fraction_x1*fraction_y1;
+        m2 = fraction_x2*fraction_y2;
+        m3 = fraction_x3*fraction_y3;
+        m4 = fraction_x4*fraction_y4;
+        fraction_mul1 = {3'b000,m1};
+        fraction_mul2 = {3'b000,m2};
+        fraction_mul3 = {3'b000,m3};
+        fraction_mul4 = {3'b000,m4};
+        ex_max32 =   (ex_add1>=ex_add2&ex_add1>=ex_add3&ex_add1>=ex_add4)?ex_add1:
+                    (ex_add2>=ex_add1&ex_add2>=ex_add3&ex_add2>=ex_add4)?ex_add2:
+                    (ex_add3>=ex_add1&ex_add3>=ex_add2&ex_add3>=ex_add4)?ex_add3:
+                    (ex_add4>=ex_add1&ex_add4>=ex_add2&ex_add4>=ex_add3)?ex_add4:8'd0;
+        diff1 = ex_max32-ex_add1;
+        diff2 = ex_max32-ex_add2;
+        diff3 = ex_max32-ex_add3;
+        diff4 = ex_max32-ex_add4;
+        s_fraction1 = fraction_mul1>>diff1;
+        s_fraction2 = fraction_mul2>>diff2;
+        s_fraction3 = fraction_mul3>>diff3;
+        s_fraction4 = fraction_mul4>>diff4;
+        end
+    else begin
+        sign_1 = (XL1[15]^YL1[15]);
+        sign_2 = (XL2[15]^YL2[15]);
+        sign_3 = (XL3[15]^YL3[15]);
+        sign_4 = (XL4[15]^YL4[15]);
+        ex_hx1 = XL1[14:10];
+        ex_hx2 = XL2[14:10];
+        ex_hx3 = XL3[14:10];
+        ex_hx4 = XL4[14:10];
+        ex_hy1 = YL1[14:10];
+        ex_hy2 = YL2[14:10];
+        ex_hy3 = YL3[14:10];
+        ex_hy4 = YL4[14:10];
+        fraction_hx1 = {1'b1,XL1[9:0]};
+        fraction_hx2 = {1'b1,XL2[9:0]};
+        fraction_hx3 = {1'b1,XL3[9:0]};
+        fraction_hx4 = {1'b1,XL4[9:0]};
+        fraction_hy1 = {1'b1,YL1[9:0]};
+        fraction_hy2 = {1'b1,YL2[9:0]};
+        fraction_hy3 = {1'b1,YL3[9:0]};
+        fraction_hy4 = {1'b1,YL4[9:0]};
+        ex_addf1 = (ex_hx1-5'd15)+(ex_hy1-5'd15)+5'd15;
+        ex_addf2 = (ex_hx2-5'd15)+(ex_hy2-5'd15)+5'd15;
+        ex_addf3 = (ex_hx3-5'd15)+(ex_hy3-5'd15)+5'd15;
+        ex_addf4 = (ex_hx4-5'd15)+(ex_hy4-5'd15)+5'd15;
+        mf1 = fraction_hx1*fraction_hy1;
+        mf2 = fraction_hx2*fraction_hy2;
+        mf3 = fraction_hx3*fraction_hy3;
+        mf4 = fraction_hx4*fraction_hy4;
+        fraction_fmul1 = {3'b000,mf1};
+        fraction_fmul2 = {3'b000,mf2};
+        fraction_fmul3 = {3'b000,mf3};
+        fraction_fmul4 = {3'b000,mf4};
+        ex_max16 = (ex_addf1>=ex_addf2&ex_addf1>=ex_addf3&ex_addf1>=ex_addf4)?ex_addf1:
+                    (ex_addf2>=ex_addf1&ex_addf2>=ex_addf3&ex_addf2>=ex_addf4)?ex_addf2:
+                    (ex_addf3>=ex_addf1&ex_addf3>=ex_addf2&ex_addf3>=ex_addf4)?ex_addf3:
+                    (ex_addf4>=ex_addf1&ex_addf4>=ex_addf2&ex_addf4>=ex_addf3)?ex_addf4:5'd0;      
+        dif1 = ex_max16-ex_addf1;
+        dif2 = ex_max16-ex_addf2;
+        dif3 = ex_max16-ex_addf3;
+        dif4 = ex_max16-ex_addf4;  
+        s_fractionf1 = fraction_fmul1 >>dif1;
+        s_fractionf2 = fraction_fmul2 >>dif2;
+        s_fractionf3 = fraction_fmul3 >>dif3;
+        s_fractionf4 = fraction_fmul4 >>dif4;
+        end
+    end
+endmodule
+module DFF1(clk,rst,sign_1,sign_2,sign_3,sign_4,ex_max32,s_fraction1,s_fraction2,s_fraction3,s_fraction4,
+        sign_1p,sign_2p,sign_3p,sign_4p,ex_max32p,s_fraction1p,s_fraction2p,s_fraction3p,s_fraction4p);
+    input clk,rst,sign_1,sign_2,sign_3,sign_4;
+    input [7:0]ex_max32;
+    input [50:0]s_fraction1,s_fraction2,s_fraction3,s_fraction4;
+    output reg sign_1p,sign_2p,sign_3p,sign_4p;
+    output reg [7:0]ex_max32p;
+    output reg [50:0]s_fraction1p,s_fraction2p,s_fraction3p,s_fraction4p;
+    always @(posedge clk or posedge rst)begin
+        if(rst ==1 )begin
+            sign_1p <= 1'b0;
+            sign_2p <= 1'b0;
+            sign_3p <= 1'b0;
+            sign_4p <= 1'b0;
+            ex_max32p <= 8'd0;
+            s_fraction1p <=51'd0;
+            s_fraction2p <=51'd0;
+            s_fraction3p <=51'd0;
+            s_fraction4p <=51'd0;
+        end
+        else  begin
+            sign_1p <= sign_1;
+            sign_2p <= sign_2;
+            sign_3p <= sign_3;
+            sign_4p <= sign_4;
+            ex_max32p <= ex_max32;
+            s_fraction1p <=s_fraction1;
+            s_fraction2p <=s_fraction2;
+            s_fraction3p <=s_fraction3;
+            s_fraction4p <=s_fraction4;
+        end
+    end
+endmodule
+module DFF12(clk,rst,sign_1,sign_2,sign_3,sign_4,ex_max16,s_fractionf1,s_fractionf2,s_fractionf3,s_fractionf4,
+        sign_12p,sign_22p,sign_32p,sign_42p,ex_max16p,s_fractionf1p,s_fractionf2p,s_fractionf3p,s_fractionf4p);
+    input clk,rst,sign_1,sign_2,sign_3,sign_4;
+    input [4:0]ex_max16;
+    input [24:0]s_fractionf1,s_fractionf2,s_fractionf3,s_fractionf4;
+    output reg sign_12p,sign_22p,sign_32p,sign_42p;
+    output reg [4:0]ex_max16p;
+    output reg [24:0]s_fractionf1p,s_fractionf2p,s_fractionf3p,s_fractionf4p;
+    always @(posedge clk or posedge rst)begin 
+        if(rst ==1 )begin
+            sign_12p <= 1'b0;
+            sign_22p <= 1'b0;
+            sign_32p <= 1'b0;
+            sign_42p <= 1'b0;
+            ex_max16p <= 5'd0;
+            s_fractionf1p <=25'd0;
+            s_fractionf2p <=25'd0;
+            s_fractionf3p <=25'd0;
+            s_fractionf4p <=25'd0;
+        end              
+        else  begin
+            sign_12p <= sign_1;
+            sign_22p <= sign_2;
+            sign_32p <= sign_3;
+            sign_42p <= sign_4;
+            ex_max16p <= ex_max16;
+            s_fractionf1p <=s_fractionf1;
+            s_fractionf2p <=s_fractionf2;
+            s_fractionf3p <=s_fractionf3;
+            s_fractionf4p <=s_fractionf4;
+        end
+    end 
+endmodule           
+//fixed-point multi-operand addition
+module ad(gclk1,sign_1,sign_2,sign_3,sign_4,sign_21,sign_22,sign_23,sign_24,s_fraction1,s_fraction2,s_fraction3,s_fraction4,sign_add,com_sum32,
+            s_fractionf1,s_fractionf2,s_fractionf3,s_fractionf4,com_sum16);
+    input gclk1;
+    input sign_1,sign_2,sign_3,sign_4;
+    input sign_21,sign_22,sign_23,sign_24;
+    input [50:0]s_fraction1,s_fraction2,s_fraction3,s_fraction4;
+    input [24:0]s_fractionf1,s_fractionf2,s_fractionf3,s_fractionf4;
+    output reg sign_add;
+    output reg [50:0]com_sum32;
+    output reg [24:0]com_sum16;
+    reg [50:0]add_1,add_2,add_3,add_4,add_sum;
+    reg [24:0]add_f1,add_f2,add_f3,add_f4,add_fsum;
+    always @(*)begin
+        if(gclk1)begin
+        add_1 = sign_1?~s_fraction1+51'd1:s_fraction1;
+        add_2 = sign_2?~s_fraction2+51'd1:s_fraction2;
+        add_3 = sign_3?~s_fraction3+51'd1:s_fraction3;
+        add_4 = sign_4?~s_fraction4+51'd1:s_fraction4;
+        add_sum = add_1+add_2+add_3+add_4;
+        sign_add = add_sum[50];
+        com_sum32 = add_sum[50]?~add_sum+51'd1:add_sum;
+        end
+        else begin
+        add_f1 = sign_21?~s_fractionf1+25'd1:s_fractionf1;
+        add_f2 = sign_22?~s_fractionf2+25'd1:s_fractionf2;
+        add_f3 = sign_23?~s_fractionf3+25'd1:s_fractionf3;
+        add_f4 = sign_24?~s_fractionf4+25'd1:s_fractionf4;
+        add_fsum = add_f1+add_f2+add_f3+add_f4;
+        sign_add = add_fsum[24];
+        com_sum16 = add_fsum[24]?~add_fsum+25'd1:add_fsum;
+        end
+    end
+endmodule
+module DFF2(clk,rst,sign_add,ex_max32p,com_sum32,sign_addp,ex_max32pp,com_sum32p);
+    input clk,rst;
+    input sign_add;
+    input [7:0]ex_max32p;
+    input [50:0]com_sum32;
+    output reg sign_addp;
+    output reg [50:0]com_sum32p;
+    output reg [7:0]ex_max32pp;
+    always @(posedge clk or posedge rst)begin
+        if(rst == 1)begin
+            sign_addp <= 1'b0;
+            com_sum32p <= 51'd0;
+            ex_max32pp <= 8'd0;
+        end
+        else begin
+            sign_addp <= sign_add; 
+            com_sum32p <= com_sum32;
+            ex_max32pp <= ex_max32p;
+        end
+    end    
+endmodule    
+
+module DFF22(clk,rst,sign_add,ex_max16p,com_sum16,sign_addp,ex_max16pp,com_sum16p);
+    input clk,rst;
+    input sign_add;
+    input [4:0]ex_max16p;
+    input [24:0]com_sum16;
+    output reg sign_addp;
+    output reg [24:0]com_sum16p;
+    output reg [4:0]ex_max16pp;    
+    always @(posedge clk or posedge rst)begin
+        if(rst == 1)begin
+            sign_addp <= 1'b0;
+            com_sum16p <= 25'd0;
+            ex_max16pp <= 5'd0;
+        end
+        else begin
+            sign_addp <= sign_add; 
+            com_sum16p <= com_sum16;
+            ex_max16pp <= ex_max16p;
+        end
+    end 
+endmodule     
+
+// LOD and normalization shift
+module normal(gclk1,ex_max32,com_sum32,ex_max16,com_sum16,n_ex32,n_f32,n_ex16,n_f16);
+    input gclk1;
+    input [7:0]ex_max32;
+    input [50:0]com_sum32;
+    input [4:0]ex_max16;
+    input [24:0]com_sum16;
+    output reg [7:0]n_ex32;
+    output reg [26:0]n_f32;
+    output reg [4:0]n_ex16;
+    output reg [13:0]n_f16;
+    wire v32,v16;
+    wire [4:0]s_num32,s_num16;
+    pen32 p0(.din({8'd0,com_sum32[45:22]}),.dout(s_num32),.valid(v32));
+    pen32 p1(.din({8'd0,com_sum16[19:9],13'd0}),.dout(s_num16),.valid(v16));
+    always @(*)begin
+        n_ex32 = 8'd0; 
+        n_f32 = 27'd0;  
+        n_ex16 = 5'd0;  
+        n_f16 = 14'd0;
+        if(gclk1)begin
+            n_ex32 = (com_sum32[49]==1)?ex_max32+8'd3:(com_sum32[48]==1)?ex_max32+8'd2:(com_sum32[47]==1)?ex_max32+8'd1:(com_sum32[49]==0&com_sum32[48]==0&com_sum32[47]==0&com_sum32[46]==0)?ex_max32-(5'd24-s_num32):ex_max32;
+            n_f32 = (com_sum32[49]==0&com_sum32[48]==0&com_sum32[47]==0&com_sum32[46]==0)?{1'b0,(com_sum32[45:20]<<(5'd24-s_num32))}:(com_sum32[49]==0&com_sum32[48]==0&com_sum32[47]==0&com_sum32[46]==1)?{1'b0,com_sum32[45:20]}:
+                    (com_sum32[49]==1)?{1'b0,com_sum32[48:23]}:(com_sum32[48]==1)?{1'b0,com_sum32[47:22]}:(com_sum32[47]==1)?{1'b0,com_sum32[46:21]}:{1'b0,com_sum32[45:20]};
+        end
+        else begin
+            n_ex16 = (com_sum16[23]==1)?ex_max16+5'd3:(com_sum16[22]==1)?ex_max16+5'd2:(com_sum16[21]==1)?ex_max16+5'd1:com_sum16[23]==0&com_sum16[22]==0&com_sum16[21]==0&com_sum16[20]==0?ex_max16-(5'd24-s_num16):ex_max16;
+            n_f16 = (com_sum16[23]==0&com_sum16[22]==0&com_sum16[21]==0&com_sum16[20]==0)?{1'b0,(com_sum16[19:7]<<(5'd24-s_num16))}:(com_sum16[23]==0&com_sum16[22]==0&com_sum16[21]==0&com_sum16[20]==1)?{1'b0,com_sum16[19:7]}:
+                    (com_sum16[23]==1)?{1'b0,com_sum16[22:10]}:(com_sum16[22]==1)?{1'b0,com_sum16[21:9]}:(com_sum16[21]==1)?{1'b0,com_sum16[20:8]}:{1'b0,com_sum16[19:7]};
+        end
+    end
+endmodule
+
+module DFF3(clk,rst,sign_addp,n_ex32,n_f32,n_ex32p,n_f32p,sign_addpp);
+    input clk,rst;
+    input [7:0]n_ex32;
+    input [26:0]n_f32;
+    input sign_addp;
+    output reg sign_addpp;
+    output reg [7:0]n_ex32p;
+    output reg [26:0]n_f32p;
+    always @(posedge clk or posedge rst)begin
+        if(rst == 1)begin
+            n_ex32p <= 8'd0;
+            n_f32p <= 27'd0;
+            sign_addpp <=1'b0;
+        end
+        else begin
+            sign_addpp <= sign_addp;
+            n_ex32p <= n_ex32;
+            n_f32p <= n_f32;
+        end
+    end              
+endmodule
+
+module DFF32(clk,rst,sign_addp,n_ex16,n_f16,n_ex16p,n_f16p,sign_addpp);
+    input clk,rst;
+    input [4:0]n_ex16;
+    input [13:0]n_f16;
+    input sign_addp;
+    output reg sign_addpp;
+    output reg [4:0]n_ex16p;
+    output reg [13:0]n_f16p;
+    always @(posedge clk or posedge rst)begin
+        if(rst == 1)begin
+            n_ex16p <= 5'd0;
+            n_f16p <= 14'd0;
+            sign_addpp <=1'b0;
+        end
+        else begin
+            sign_addpp <= sign_addp;
+            n_ex16p <= n_ex16;
+            n_f16p <= n_f16;
+        end
+    end        
+endmodule
+//rounding
+module rp(gclk1,sign_add,sign_addpp2,n_ex32,n_f32,n_ex16,n_f16,s);
+    input gclk1,sign_add,sign_addpp2;
+    input [7:0]n_ex32;
+    input [26:0]n_f32;
+    input [4:0]n_ex16;
+    input [13:0]n_f16;
+    output reg[31:0]s;
+    reg [7:0]r_ex;
+    reg [26:0]r_f;
+    reg [22:0]r_s;
+    reg [4:0]r_fex;
+    reg [13:0]r_ff;
+    reg [9:0]r_fs;
+    always @(*)begin
+        if(gclk1)begin
+            r_f = (n_f32[2]==1&n_f32[1]==1&n_f32[0]==1)?n_f32+27'd8:(n_f32[2]==1&n_f32[1]==1&n_f32[0]==0)?n_f32+27'd8:(n_f32[2]==1&n_f32[1]==0&n_f32[0]==1)?n_f32+27'd8:
+                        (n_f32[2]==1&n_f32[1]==0&n_f32[0]==0&n_f32[3]==0)?n_f32+27'd8:(n_f32[2]==1&n_f32[1]==0&n_f32[0]==0&n_f32[3]==1)?n_f32+27'd8:n_f32;
+            r_ex = r_f[26]?n_ex32+8'd1:n_ex32;
+            r_s = r_f[26]?r_f[26:4]:r_f[25:3];
+            {s[31],s[30:23],s[22:0]} = {sign_add,r_ex,r_s};
+        end
+        else begin
+            r_ff =(n_f16[2]==1&n_f16[1]==1&n_f16[0]==1)?n_f16+14'd8:(n_f16[2]==1&n_f16[1]==1&n_f16[0]==0)?n_f16+14'd8:(n_f16[2]==1&n_f16[1]==0&n_f16[0]==1)?n_f16+14'd8:
+                        (n_f16[2]==1&n_f16[1]==0&n_f16[0]==0&n_f16[3]==0)?n_f16+14'd8:(n_f16[2]==1&n_f16[1]==0&n_f16[0]==0&n_f16[3]==1)?n_f16+14'd8:n_f16;
+            r_fex =r_ff[13]?n_ex16+5'd1:n_ex16;
+            r_fs = r_ff[13]?r_ff[13:4]:r_ff[12:3];
+            {s[31:16],s[15],s[14:10],s[9:0]} = {16'd0,sign_addpp2,r_fex,r_fs};
+        end
+    end
+endmodule
+
+
+//priority encoder
+module penc4(din,dout,valid);
+input [3:0]din;
+output [1:0]dout;
+output valid;
+assign dout[1]=din[3]|din[2];
+assign dout[0]=din[3]|(din[1])&(!din[2]);
+assign valid=|din;
+endmodule
+
+module pen32(din, dout, valid);
+    input [31:0] din;
+    output [4:0] dout;
+    output valid;
+    wire [1:0] a, b, c, d,e,f,g,h;
+    wire v0,v1,v2,v3,v4,v5,v6,v7;
+    penc4 p0(.din(din[3:0]),.dout(a),.valid(v0));
+    penc4 p1(.din(din[7:4]),.dout(b),.valid(v1));
+    penc4 p2(.din(din[11:8]),.dout(c),.valid(v2));
+    penc4 p3(.din(din[15:12]),.dout(d),.valid(v3));
+    penc4 p4(.din(din[19:16]),.dout(e),.valid(v4));
+    penc4 p5(.din(din[23:20]),.dout(f),.valid(v5));
+    penc4 p6(.din(din[27:24]),.dout(g),.valid(v6));
+    penc4 p7(.din(din[31:28]),.dout(h),.valid(v7));
+    assign valid = v0|v1|v2|v3|v4|v5|v6|v7;
+    assign dout[4:2] = v7?3'b111:v6?3'b110:v5?3'b101:v4?3'b100:v3?3'b011:v2?3'b010:v1?3'b001:3'b000;
+    assign dout[1:0] = v7?h:v6?g:v5?f:v4?e:v3?d:v2?c:v1?b:a;
+endmodule
