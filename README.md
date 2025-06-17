@@ -2,15 +2,14 @@
 
 FLP dot-product-4 (DP4) z=x1*y1+x2*y2+x3*y3+x4*y4
 
-– support 32-bit single-precision and 16-bit half-precision
-– 4-stage pipelining:
+1. support 32-bit single-precision and 16-bit half-precision
+2. 4-stage pipelining:
   stage1:unpack, fixed-point multiplication, alignment
   stage2:fixed-point addition, conversion to sign-magnitude 
   stage3:normalization
   stage4:rounding, pack
-– clock gating for un-necessary computation units
+3. clock gating for un-necessary computation units
   close un-necessary DFF
-– power measurement using Prime Time
 
 system architecture:
 
