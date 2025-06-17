@@ -29,11 +29,11 @@ Clock-gating is employed to disable unnecessary D flip-flops (DFFs) and reduce p
 
 ![Capture1](https://github.com/user-attachments/assets/09684f3d-5563-48a6-aa44-f9b2074e810d)
 
-wave for 16-bit half-precision:
+Simulation Result 16-bit half-precision:
 
 ![w16](https://github.com/user-attachments/assets/b97860e0-c6bf-4165-965d-eb78861c9b5a)
 
-wave for 32-bit single-precision:
+Simulation Result 32-bit single-precision:
 
 ![w32](https://github.com/user-attachments/assets/ca3a2ebe-4b62-4778-ba4b-d6dbee1c8823)
 
