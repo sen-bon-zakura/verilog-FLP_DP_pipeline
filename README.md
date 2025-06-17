@@ -10,6 +10,7 @@ FLP dot-product-4 (DP4) z=x1*y1+x2*y2+x3*y3+x4*y4
   stage4:rounding, pack
 – clock gating for un-necessary computation units
   close un-necessary DFF
+– power measurement using Prime Time
 
 system architecture:
 
@@ -44,4 +45,9 @@ For single-precision, the error is slightly higher, with an average error of 0.2
 The larger error mainly comes from the fact that after multiplying two single-precision numbers, the result still needs to be added to the results of three other multiplication pairs. 
 In the data, some values might be significantly larger or smaller than others, which can introduce errors during alignment (shifting). 
 In cases where all 4 values are involved, the accumulated error may increase further. However, the error is still within an acceptable range.
+
+clock gating:
+
+![gclk](https://github.com/user-attachments/assets/d23054b1-99c9-427d-9733-bc1279da2676)
+
 
